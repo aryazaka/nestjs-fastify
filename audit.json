@@ -1,0 +1,16 @@
+{
+    "keepSettings": {
+        "type": 2,
+        "amount": 10
+    },
+    "auditFilename": "D:\\ARYA\\ITHO INDOSTOCK\\be-bayarin/audit.json",
+    "hashType": "md5",
+    "extension": ".log",
+    "files": [
+        {
+            "date": 1751632047980,
+            "name": "D:\\ARYA\\ITHO INDOSTOCK\\be-bayarin/File-2025-07-04.0.log",
+            "hash": "913b6675e001733359641eb9fe004f42"
+        }
+    ]
+}
