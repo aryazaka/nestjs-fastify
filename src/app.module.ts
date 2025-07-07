@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { BooksModule } from './modules/books/books.module';
 import { ConfigModule } from '@nestjs/config';
+import { RabbitMQModule } from './common/rabbitmq/rabbitmq.module';
+import { RedisModule } from './common/redis/redis.module';
+import { WorkerModule } from './worker/worker.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -22,6 +25,9 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
     }),
     BooksModule,
+    RabbitMQModule,
+    RedisModule,
+    WorkerModule
   ],
 })
 export class AppModule {}

@@ -1,53 +1,80 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateBookDto } from './dto/create.books.dto';
-import { UpdateBookDto } from './dto/update.books.dto';
-import { Book } from './interfaces/book.interface';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AppLogger } from '../../common/logger/logger.service';
+import { CreateBookDto } from './dto/create.books.dto';
+import { UpdateBookDto } from './dto/update.books.dto';
+import { RabbitMQService } from '../../common/rabbitmq/rabbitmq.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 @Injectable()
 export class BookService {
-  constructor(private DB: PrismaService, private readonly logger: AppLogger) {}
+  private readonly queueName = 'books_queue';
 
-  private books : Book[] = [{id: 1, title: 'Book 1', author: 'Author 1', price: 100}];
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: AppLogger,
+    private readonly rabbitMQ: RabbitMQService,
+    private readonly redis: RedisService,
+  ) {}
 
- async findAll() {
-  console.log('▶ Running findAll()');
-  this.logger.info('▶ findAll() called');
-  const data = await this.DB.berita.findMany();
-  console.log('✅ findMany() result:', data);
-   this.logger.debug('✅ findAll() result:', data);
-  return data;
-}
+  // Create: kirim ke worker, worker yg insert & update cache
+  async create(data: CreateBookDto) {
+    await this.rabbitMQ.publish(this.queueName, data);
+    // Optional: hapus cache all biar next findAll fresh
+    await this.redis.del('book:all');
+    return { success: true, message: 'Book queued to be saved!' };
+  }
 
+  // Update: update DB & update cache
+  async update(id: number, data: UpdateBookDto) {
+    const updated = await this.prisma.book.update({ where: { id }, data });
+    await this.redis.set(`book:${id}`, JSON.stringify(updated));
+    await this.redis.del('book:all'); // invalidate list cache
+    return updated;
+  }
+
+  // FindOne: cache first
   async findOne(id: number) {
-    const book = this.books.find(b => b.id === id);
+    const cacheKey = `book:${id}`;
+
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit: ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    this.logger.debug(`Cache miss: ${cacheKey}, fetching from DB`);
+    const book = await this.prisma.book.findUnique({ where: { id } });
     if (!book) throw new NotFoundException('Book not found');
+
+    await this.redis.set(cacheKey, JSON.stringify(book),  60 * 60 );
+// TTL 1 jam
     return book;
   }
 
-  async create(data: CreateBookDto) {
-    const newBook = {
-      id: Date.now(),
-      ...data,
-    };
-    this.books.push(newBook);
-    return newBook;
+  // FindAll: cache first
+  async findAll() {
+    const cacheKey = 'book:all';
+
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      console.log(`Cache hit: ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    console.log(`Cache miss: ${cacheKey}, fetching from DB`);
+    const books = await this.prisma.book.findMany();
+
+   await this.redis.set(cacheKey, JSON.stringify(books), 60 * 60 );
+
+    return books;
   }
 
-  async update(id: number, data: UpdateBookDto) {
-    const index = this.books.findIndex(b => b.id === id);
-    if (index === -1) throw new NotFoundException('Book not found');
-
-    this.books[index] = { ...this.books[index], ...data };
-    return this.books[index];
-  }
-
+  // Remove: delete from DB & delete cache
   async remove(id: number) {
-    const index = this.books.findIndex(b => b.id === id);
-    if (index === -1) throw new NotFoundException('Book not found');
-
-    const deleted = this.books.splice(index, 1);
-    return deleted[0];
+    await this.prisma.book.delete({ where: { id } });
+    await this.redis.del(`book:${id}`);
+    await this.redis.del('book:all'); // invalidate list cache
+    return { success: true };
   }
 }
