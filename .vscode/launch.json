@@ -4,18 +4,17 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug NestJS",
-      "program": "${workspaceFolder}/src/main.ts",
-      "autoAttachChildProcesses": true,
+      "name": "Debug NestJS App",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "-r",
-        "ts-node/register"
+        "run",
+        "start:debug"
       ],
-      "env": {
-        "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json"
-      },
+      "console": "integratedTerminal",
+      "restart": true,
       "sourceMaps": true,
-      "cwd": "${workspaceFolder}"
+      "autoAttachChildProcesses": true,
+      "stopOnEntry": false
     }
   ]
 }
