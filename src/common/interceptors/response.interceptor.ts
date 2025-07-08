@@ -17,7 +17,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         return {
           success: true,
           message: response?.message ?? 'Request successful',
-          data: response?.data ?? null,
           ...response, // merge semua field tambahan (misalnya test: 200)
         };
       }),

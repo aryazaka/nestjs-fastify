@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { BookService } from './books.service';
 import { CreateBookDto } from './dto/create.books.dto';
 import { UpdateBookDto } from './dto/update.books.dto';
@@ -8,24 +17,21 @@ export class BookController {
   constructor(private readonly bookService: BookService) {}
 
   @Get()
-async findAll() {
+  async findAll() {
     return {
-  data: await this.bookService.findAll(),
-    success: true,
-    test: 200,
-  message: 'List of books berhasil!!',
-};
+      data: await this.bookService.findAll(),
+      success: true,
+      message: 'List of books berhasil!!',
+    };
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-     return {
-  data: await this.bookService.findOne(id),
-    success: true,
-    test: 200,
-  message: 'List of books berhasil!!',
-};
-    
+    return {
+      data: await this.bookService.findOne(id),
+      success: true,
+      message: 'List of books berhasil!!',
+    };
   }
 
   @Post()
@@ -34,7 +40,10 @@ async findAll() {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBookDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBookDto,
+  ) {
     return await this.bookService.update(id, dto);
   }
 

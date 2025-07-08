@@ -7,7 +7,7 @@ export class RabbitMQService implements OnModuleInit {
 
   async onModuleInit() {
     const rmqURL = process.env.RABBITMQ_URL || 'amqp://localhost';
-    console.log(`Connecting to RabbitMQ at ${rmqURL}`);
+    console.log(`Connecting to RabbitMQ`);
     const conn = await amqp.connect(rmqURL);
     this.channel = await conn.createChannel();
     console.log('✅ RabbitMQ channel created');

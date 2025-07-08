@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS",
+      "program": "${workspaceFolder}/src/main.ts",
+      "autoAttachChildProcesses": true,
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register"
+      ],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json"
+      },
+      "sourceMaps": true,
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -25,14 +25,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
         const resObj = res as any;
-
-        // resObj.message bisa string atau array (pada ValidationPipe)
         message = Array.isArray(resObj.message) ? 'Validation error' : resObj.message || message;
-
-        errors = resObj.message || null; // simpan detail error di errors
+        errors = resObj.message || null;
       }
     } else if (exception instanceof Error) {
-      message = exception.message;
+      // Default pakai pesan error aslinya
+      const rawMessage = exception.message || '';
+
+      // 🔍 Cek jika error terkait database, ubah message user-friendly
+      if (rawMessage.toLowerCase().includes('table') && rawMessage.toLowerCase().includes('does not exist')) {
+        message = 'Error accessing database';
+      } else if (rawMessage.toLowerCase().includes('prisma')) {
+        message = 'Unexpected database error';
+      } else {
+        message = rawMessage;
+      }
+
+      errors = rawMessage;
     }
 
     response.status(status).send({
