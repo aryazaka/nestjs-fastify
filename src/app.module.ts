@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { BooksModule } from './modules/books/books.module';
+// import { BooksModule } from './modules/books/books.module';
 import { ConfigModule } from '@nestjs/config';
 import { RabbitMQModule } from './common/rabbitmq/rabbitmq.module';
 import { RedisModule } from './common/redis/redis.module';
 import { WorkerModule } from './worker/worker.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     DevtoolsModule.register({
@@ -30,10 +31,11 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    BooksModule,
+    // BooksModule,
     RabbitMQModule,
     RedisModule,
     WorkerModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
