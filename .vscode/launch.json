@@ -4,17 +4,39 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug NestJS App",
+      "name": "Debug be-core (npm start:debug)",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
         "start:debug"
       ],
+      "cwd": "${workspaceFolder}/be-core",
       "console": "integratedTerminal",
-      "restart": true,
-      "sourceMaps": true,
-      "autoAttachChildProcesses": true,
-      "stopOnEntry": false
+      "internalConsoleOptions": "neverOpen",
+      "autoAttachChildProcesses": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug worker (npm start:worker)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start:worker"
+      ],
+      "cwd": "${workspaceFolder}/worker",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "autoAttachChildProcesses": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug both be-core & worker",
+      "configurations": [
+        "Debug be-core (npm start:debug)",
+        "Debug worker (npm start:worker)"
+      ]
     }
   ]
 }

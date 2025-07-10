@@ -1,123 +1,202 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# be-bayarin: Microservices Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+`be-bayarin` adalah proyek backend yang mengimplementasikan arsitektur microservices menggunakan NestJS, TypeScript, RabbitMQ sebagai message broker, Redis untuk caching, dan Prisma sebagai ORM.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Arsitektur Aplikasi
 
-## Description
+Proyek ini dirancang dengan pendekatan microservices untuk memisahkan tanggung jawab dan meningkatkan skalabilitas. Terdiri dari dua komponen utama:
 
-NestJS backend API dengan Prisma ORM, validasi, error handling global, dan response interceptor standar.
-Dibuat sebagai backend aplikasi sederhana dan contoh modular API.
+1.  **`be-core` (API Gateway / Main Application)**:
+    *   Berfungsi sebagai API Gateway utama yang menerima semua permintaan HTTP dari frontend.
+    *   Menangani operasi `GET` (misalnya, `findAll`, `findOne`) secara langsung, berinterinteraksi dengan database melalui Prisma dan memanfaatkan Redis untuk caching guna meningkatkan performa.
+    *   Untuk operasi modifikasi data (`POST`, `PATCH`, `DELETE`), `be-core` bertindak sebagai klien RabbitMQ. Ia mengirimkan pesan RPC (Remote Procedure Call) ke worker melalui RabbitMQ dan menunggu respons.
+    *   Dilengkapi dengan exception filter global untuk menangani error secara terpusat, termasuk `RpcException` dari worker dan `TimeoutError` jika worker tidak merespons.
 
----
+2.  **`worker` (Microservice)**:
+    *   Berfungsi sebagai microservice yang mendengarkan pesan RPC dari RabbitMQ.
+    *   Memproses operasi modifikasi data (`create_company`, `update_company`, `delete_company`) yang diterima dari `be-core`.
+    *   Berinteraksi langsung dengan database melalui Prisma untuk melakukan operasi CRUD.
+    *   Bertanggung jawab untuk membersihkan cache Redis yang relevan setelah modifikasi data.
+    *   Melemparkan `RpcException` jika terjadi error selama pemrosesan, yang kemudian akan ditangkap oleh `be-core`.
 
-## ✨ Fitur Utama
+**RabbitMQ** digunakan sebagai message broker untuk komunikasi asinkron dan pola request-response (RPC) antara `be-core` dan `worker`. Antrean RabbitMQ dikonfigurasi sebagai `durable: true` untuk memastikan persistensi pesan dan antrean.
 
-✅ **Modular Structure**  
-- Menggunakan NestJS dengan folder `modules` terpisah.  
-- Contoh: `books` module.
+**Redis** digunakan oleh `be-core` untuk caching data `GET` guna mengurangi beban database dan mempercepat respons.
 
-✅ **ORM**  
-- Menggunakan **Prisma** untuk koneksi database PostgreSQL/MySQL/SQLite.
-- Query data, create, update, delete, lengkap dengan handle error.
+**Prisma** digunakan sebagai Object-Relational Mapper (ORM) untuk interaksi dengan database di kedua komponen.
 
-✅ **Global Error Handling**  
-- Semua error (validation, ORM error, internal server error) dirapikan lewat `AllExceptionsFilter`.
+## Teknologi Utama
 
-✅ **Global Response Formatter**  
-- Semua response di-wrap dengan format:
-```json
-{
-  "success": true,
-  "message": "Request successful",
-  "data": {...}
-}
+*   **Backend Framework**: [NestJS](https://nestjs.com/) (TypeScript)
+*   **Message Broker**: [RabbitMQ](https://www.rabbitmq.com/)
+*   **Caching**: [Redis](https://redis.io/)
+*   **ORM**: [Prisma](https://www.prisma.io/)
+*   **Database**: (Contoh: PostgreSQL, MySQL - sesuai konfigurasi Prisma Anda)
 
-## Project setup
+## Struktur Proyek
 
-```bash
-$ npm install
+```
+be-bayarin/
+├── be-core/             # Aplikasi utama / API Gateway
+│   ├── src/             # Kode sumber be-core
+│   │   ├── modules/     # Modul aplikasi (e.g., auth, company)
+│   │   ├── infra/       # Infrastruktur (prisma, redis, logger)
+│   │   └── ...
+│   ├── .env.example     # Contoh konfigurasi environment
+│   ├── package.json     # Dependensi dan script be-core
+│   └── ...
+├── worker/              # Microservice worker
+│   ├── src/             # Kode sumber worker
+│   │   ├── worker/      # Service worker (e.g., company.worker.service)
+│   │   ├── infra/       # Infrastruktur (prisma, redis, logger)
+│   │   └── ...
+│   ├── .env.example     # Contoh konfigurasi environment
+│   ├── package.json     # Dependensi dan script worker
+│   └── ...
+├── .vscode/             # Konfigurasi VS Code (termasuk debugger)
+│   └── launch.json
+├── README.md            # Dokumentasi proyek ini
+└── ...
 ```
 
-## Compile and run the project
+## Setup dan Instalasi
 
-```bash
-# development
-$ npm run start
+### Prasyarat
 
-# watch mode
-$ npm run start:dev
+Pastikan Anda memiliki perangkat lunak berikut terinstal:
 
-# production mode
-$ npm run start:prod
-```
+*   [Node.js](https://nodejs.org/en/) (v18 atau lebih baru direkomendasikan)
+*   [npm](https://www.npmjs.com/) (biasanya terinstal dengan Node.js)
+*   [Docker](https://www.docker.com/get-started) (untuk menjalankan RabbitMQ, Redis, dan Database)
 
-## Run tests
+### Langkah-langkah Instalasi
 
-```bash
-# unit tests
-$ npm run test
+1.  **Clone Repositori:**
+    ```bash
+    git clone <URL_REPOSITORI_ANDA>
+    cd be-bayarin
+    ```
 
-# e2e tests
-$ npm run test:e2e
+2.  **Instal Dependensi:**
+    Instal dependensi untuk `be-core` dan `worker`.
+    ```bash
+    cd be-core
+    npm install
+    cd ../worker
+    npm install
+    cd .. # Kembali ke direktori root
+    ```
 
-# test coverage
-$ npm run test:cov
-```
+3.  **Konfigurasi Environment Variables:**
+    Buat file `.env` di dalam direktori `be-core/` dan `worker/` berdasarkan file `.env.example` yang tersedia.
 
-## Deployment
+    **`be-core/.env` dan `worker/.env`:**
+    ```env
+RABBITMQ_URL=amqp://localhost:5672
+RABBITMQ_RPC_QUEUE_NAME=worker_rpc_queue
+REDIS_URL=redis://localhost:6379
+DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public" # Sesuaikan dengan DB Anda
+PORT=8000 # Untuk be-core
+    ```
+    *Pastikan `RABBITMQ_URL` dan `RABBITMQ_RPC_QUEUE_NAME` konsisten di kedua file `.env`.*
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+4.  **Setup Database (Prisma):**
+    Pastikan database Anda berjalan (misalnya, PostgreSQL via Docker). Kemudian, jalankan migrasi Prisma.
+    ```bash
+    cd be-core
+    npx prisma migrate dev --name init # Sesuaikan nama migrasi jika perlu
+    # Jika worker juga perlu akses Prisma Client, pastikan skema sudah di-generate:
+    # cd ../worker
+    # npx prisma generate
+    cd .. # Kembali ke direktori root
+    ```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Menjalankan Aplikasi
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+Pastikan Docker Anda berjalan untuk menjalankan RabbitMQ, Redis, dan Database.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+1.  **Jalankan RabbitMQ dan Redis (menggunakan Docker):**
+    ```bash
+    docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+    docker run -d --name some-redis -p 6379:6379 redis
+    # Untuk database, gunakan image Docker yang sesuai (misal: postgres)
+    ```
 
-## Resources
+2.  **Jalankan Worker:**
+    Buka terminal baru, navigasi ke direktori `worker`, dan jalankan:
+    ```bash
+    cd worker
+    npm run start:worker
+    ```
+    Anda akan melihat log seperti `Worker is listening on queue: worker_rpc_queue`.
 
-Check out a few resources that may come in handy when working with NestJS:
+3.  **Jalankan `be-core`:**
+    Buka terminal baru, navigasi ke direktori `be-core`, dan jalankan:
+    ```bash
+    cd be-core
+    npm run start:dev # Untuk development dengan hot-reload
+    # atau npm run start:prod untuk production
+    ```
+    Anda akan melihat log bahwa `be-core` berhasil dimulai (misalnya, `🚀 Server ready on http://localhost:8000`).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## API Endpoints (Contoh untuk Modul Company)
 
-## Support
+Berikut adalah contoh endpoint untuk modul `Company`:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+*   **GET /company**
+    *   **Deskripsi**: Mengambil daftar semua perusahaan.
+    *   **Penanganan**: Langsung oleh `be-core` (menggunakan Redis cache dan Prisma).
+    *   **Contoh Respon Sukses**:
+        ```json
+        {
+          "data": [
+            { "id": 1, "name": "Company A", "address": "..." }
+          ],
+          "success": true,
+          "message": "List of companies retrieved successfully!"
+        }
+        ```
 
-## Stay in touch
+*   **GET /company/:id**
+    *   **Deskripsi**: Mengambil detail perusahaan berdasarkan ID.
+    *   **Penanganan**: Langsung oleh `be-core` (menggunakan Redis cache dan Prisma).
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+*   **POST /company**
+    *   **Deskripsi**: Membuat perusahaan baru.
+    *   **Penanganan**: `be-core` mengirim pesan RPC ke `worker` melalui RabbitMQ.
+    *   **Body Request (JSON)**:
+        ```json
+        {
+          "name": "New Company Name",
+          "emailAdmin": "admin@example.com",
+          "officePhone": "+628123456789",
+          "address": "Jl. Contoh No. 123"
+        }
+        ```
 
-## License
+*   **PATCH /company/:id**
+    *   **Deskripsi**: Memperbarui detail perusahaan berdasarkan ID.
+    *   **Penanganan**: `be-core` mengirim pesan RPC ke `worker` melalui RabbitMQ.
+    *   **Body Request (JSON)**:
+        ```json
+        {
+          "name": "Updated Company Name"
+        }
+        ```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+*   **DELETE /company/:id**
+    *   **Deskripsi**: Menghapus perusahaan berdasarkan ID.
+    *   **Penanganan**: `be-core` mengirim pesan RPC ke `worker` melalui RabbitMQ.
+
+## Debugging dengan VS Code
+
+Proyek ini dilengkapi dengan konfigurasi debugging untuk VS Code. Anda dapat menempatkan breakpoint di kode Anda dan menjalankan aplikasi dalam mode debug.
+
+1.  Buka proyek di VS Code.
+2.  Pergi ke tab **Run and Debug** (ikon serangga di sidebar kiri).
+3.  Pilih salah satu konfigurasi dari dropdown:
+    *   `Launch be-core`
+    *   `Launch worker`
+4.  Klik tombol hijau **Start Debugging**.
+
+Anda dapat menjalankan kedua konfigurasi secara bersamaan untuk debugging end-to-end.

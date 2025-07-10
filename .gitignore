@@ -1,7 +1,12 @@
-# compiled output
-/dist
-/node_modules
-/build
+# Node.js dependencies
+be-core/node_modules
+worker/node_modules
+
+# Build output
+be-core/dist
+worker/dist
+be-core/build
+worker/build
 
 # Logs
 logs
@@ -12,47 +17,60 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# OS
+# OS files
 .DS_Store
+Thumbs.db
 
-# Tests
-/coverage
-/.nyc_output
+# Test coverage
+be-core/coverage
+worker/coverage
+be-core/.nyc_output
+worker/.nyc_output
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
+# Editor settings
+.idea/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# Env files
+be-core/.env
+be-core/.env.local
+be-core/.env.*.local
+worker/.env
+worker/.env.local
+worker/.env.*.local
 
-# temp directory
-.temp
+# Temporary files
 .tmp
+.temp
 
-# Runtime data
+# Process IDs
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-/generated/prisma
+# Prisma generated
+be-core/generated/prisma
+be-core/prisma/migrations
+worker/generated/prisma
+worker/prisma/migrations
+
+# npm cache & debug
+.npm
+
+# Other
+*.swp
+*.swo
