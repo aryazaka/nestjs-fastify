@@ -16,6 +16,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Tambahkan ini agar file .env selalu ada
+      - name: Write be-core .env
+        run: echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
+
+      - name: Write worker .env
+        run: echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
+
       # --- Deploy be-core jika ada perubahan ---
       - name: Stop & remove old be-core container and image
         if: |
@@ -31,7 +38,6 @@ jobs:
           contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
           contains(join(github.event.commits.*.added, ','), 'be-core/')
         run: |
-          echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
           docker build -t be-core-stage:latest ./be-core
 
       # --- Deploy worker jika ada perubahan ---
@@ -49,9 +55,8 @@ jobs:
           contains(join(github.event.commits.*.modified, ','), 'worker/') ||
           contains(join(github.event.commits.*.added, ','), 'worker/')
         run: |
-          echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
           docker build -t worker-stage:latest ./worker
 
-      # --- Deploy (jalankan compose, tidak build, hanya up image yang sudah dibuat) ---
+      # --- Deploy pakai docker compose ---
       - name: Deploy using docker-compose
         run: docker compose -f docker-compose.stage.yml up -d
