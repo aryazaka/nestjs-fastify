@@ -16,51 +16,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- Tambahkan file .env agar container punya env ---
-      - name: Write be-core .env
-        run: echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
-
-      - name: Write worker .env
-        run: echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
-
-      # --- Build & Deploy be-core ---
-      - name: Stop & remove old be-core container and image
-        if: |
-          github.event.created == true ||
-          contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
-          contains(join(github.event.commits.*.added, ','), 'be-core/')
+      # 🧠 Detect changes
+      - name: Detect changes
+        id: changes
         run: |
-          docker stop be-core-container || true
-          docker rm be-core-container || true
+          git fetch origin stage
+          echo "BE_CORE_CHANGED=$(git diff --name-only HEAD^ HEAD | grep '^be-core/' || true)" >> $GITHUB_ENV
+          echo "WORKER_CHANGED=$(git diff --name-only HEAD^ HEAD | grep '^worker/' || true)" >> $GITHUB_ENV
+
+      # 🗑 Hapus image lama (tanpa stop container manual)
+      - name: Remove old be-core image
+        if: env.BE_CORE_CHANGED != ''
+        run: |
           docker rmi be-core-stage:latest || true
 
-      - name: Build be-core image
-        if: |
-          github.event.created == true ||
-          contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
-          contains(join(github.event.commits.*.added, ','), 'be-core/')
+      - name: Build new be-core image
+        if: env.BE_CORE_CHANGED != ''
         run: |
+          echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
           docker build -t be-core-stage:latest ./be-core
 
-      # --- Build & Deploy worker ---
-      - name: Stop & remove old worker container and image
-        if: |
-          github.event.created == true ||
-          contains(join(github.event.commits.*.modified, ','), 'worker/') ||
-          contains(join(github.event.commits.*.added, ','), 'worker/')
+      - name: Remove old worker image
+        if: env.WORKER_CHANGED != ''
         run: |
-          docker stop worker-container || true
-          docker rm worker-container || true
           docker rmi worker-stage:latest || true
 
-      - name: Build worker image
-        if: |
-          github.event.created == true ||
-          contains(join(github.event.commits.*.modified, ','), 'worker/') ||
-          contains(join(github.event.commits.*.added, ','), 'worker/')
+      - name: Build new worker image
+        if: env.WORKER_CHANGED != ''
         run: |
+          echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
           docker build -t worker-stage:latest ./worker
 
-      # --- Deploy pakai docker compose ---
+      # 🐳 Refresh containers: down → up -d
       - name: Deploy using docker-compose
-        run: docker compose -f docker-compose.stage.yml up -d
+        run: |
+          docker compose -f docker-compose.stage.yml down
+          docker compose -f docker-compose.stage.yml up -d

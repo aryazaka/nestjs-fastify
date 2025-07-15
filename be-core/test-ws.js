@@ -10,7 +10,7 @@ socket.on('connect', () => {
 socket.on('company_created', (data) => {
   console.log('Received created company from WS:', data);
 }); 
-console.log('test 2');
+console.log('test 3');
 socket.on('disconnect', () => {
   console.log('Disconnected');
 });
