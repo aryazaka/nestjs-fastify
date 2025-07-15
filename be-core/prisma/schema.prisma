@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Company {
-  id             Int             @id @default(autoincrement())
-  name           String
-  emailAdmin     String
-  officePhone    String
-  address        String
-  users          User[]
-  payrollPeriods PayrollPeriod[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  emailAdmin         String
+  officePhone        String
+  address            String
+  users              User[]
+  payrollPeriods     PayrollPeriod[]
+  AttendanceSchedule AttendanceSchedule[]
 }
 
 model User {
@@ -111,21 +112,49 @@ model SalaryAdvance {
   processedAt       DateTime?
 }
 
+model AttendanceSchedule {
+  id           Int          @id @default(autoincrement())
+  company      Company      @relation(fields: [companyId], references: [id])
+  companyId    Int
+  date         DateTime
+  checkInTime  DateTime
+  checkOutTime DateTime
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  attendances  Attendance[]
+}
+
 model Attendance {
-  id               Int           @id @default(autoincrement())
-  employee         Employee      @relation(fields: [employeeId], references: [id])
+  id               Int                @id @default(autoincrement())
+  employee         Employee           @relation(fields: [employeeId], references: [id])
   employeeId       Int
-  absenceStatus    AbsenceStatus
+  schedule         AttendanceSchedule @relation(fields: [scheduleId], references: [id])
+  scheduleId       Int
+  checkInTime      DateTime?
+  checkOutTime     DateTime?
+  checkInLocation  String?
+  checkOutLocation String?
+  checkInPhoto     String?
+  checkOutPhoto    String?
+  status           AttendanceStatus   @default(PENDING)
   remarks          String?
-  checkInlocation  String?
-  checkOutlocation String?
-  checkInphoto     String?
-  checkOutphoto    String?
-  proofPhoto       String?
-  checkIntime      DateTime?
-  checkOuttime     DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  absenceRequest   AbsenceRequest?
+}
+
+model AbsenceRequest {
+  id           Int           @id @default(autoincrement())
+  attendance   Attendance    @relation(fields: [attendanceId], references: [id])
+  attendanceId Int           @unique
+  reason       AbsenceReason
+  description  String?
+  proofPhoto   String?
+  status       RequestStatus @default(PENDING)
+  reviewedAt   DateTime?
+  reviewedBy   Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Notification {
@@ -140,6 +169,7 @@ model Notification {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   HR
   FINANCE
@@ -170,9 +200,21 @@ enum PaymentStatus {
   FAILED
 }
 
-enum AbsenceStatus {
+enum AttendanceStatus {
+  PENDING
   PRESENT
   SICK
   PERMISSION
   ABSENT
+}
+
+enum AbsenceReason {
+  SICK
+  PERMISSION
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
