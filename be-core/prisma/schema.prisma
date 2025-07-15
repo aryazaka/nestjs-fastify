@@ -18,16 +18,17 @@ model Company {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  company       Company   @relation(fields: [companyId], references: [id])
-  companyId     Int
-  name          String
-  email         String    @unique
-  address       String
-  role          Role
-  contactNumber String
-  passwordHash  String
-  employee      Employee?
+  id                  Int                  @id @default(autoincrement())
+  company             Company              @relation(fields: [companyId], references: [id])
+  companyId           Int
+  name                String
+  email               String               @unique
+  address             String
+  role                Role
+  contactNumber       String
+  passwordHash        String
+  employee            Employee?
+  paymentTransactions PaymentTransaction[]
 }
 
 model Employee {
@@ -58,15 +59,16 @@ model Salary {
 }
 
 model PayrollPeriod {
-  id             Int             @id @default(autoincrement())
-  company        Company         @relation(fields: [companyId], references: [id])
-  companyId      Int
-  periodStart    DateTime
-  periodEnd      DateTime
-  payDate        DateTime
-  status         PayrollStatus
-  payrolls       Payroll[]
-  salaryAdvances SalaryAdvance[]
+  id                  Int                  @id @default(autoincrement())
+  company             Company              @relation(fields: [companyId], references: [id])
+  companyId           Int
+  periodStart         DateTime
+  periodEnd           DateTime
+  payDate             DateTime
+  status              PayrollStatus
+  payrolls            Payroll[]
+  salaryAdvances      SalaryAdvance[]
+  paymentTransactions PaymentTransaction[]
 }
 
 model Payroll {
@@ -77,7 +79,8 @@ model Payroll {
   payrollPeriodId Int
   totalSalary     Float
   netSalary       Float
-  paidDate        DateTime
+  paidDate        DateTime?
+  status          PaymentStatus      @default(UNPAID)
   components      PayrollComponent[]
 }
 
@@ -89,6 +92,22 @@ model PayrollComponent {
   amount    Float
   type      String
 }
+
+model PaymentTransaction {
+  id                       String        @id @default(cuid())
+  payrollPeriod            PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
+  payrollPeriodId          Int
+  totalAmount              Float
+  paymentMethod            String
+  status                   TransactionStatus
+  paidBy                   User          @relation(fields: [paidById], references: [id])
+  paidById                 Int
+  xenditPaymentRequestId   String?       @unique
+  xenditBatchDisbId       String?       @unique
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+}
+
 
 model SalaryAdvance {
   id                Int           @id @default(autoincrement())
@@ -140,6 +159,7 @@ model Notification {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   HR
   FINANCE
@@ -166,6 +186,7 @@ enum AdvanceStatus {
 
 enum PaymentStatus {
   UNPAID
+  PROCESSING
   PAID
   FAILED
 }
@@ -175,4 +196,11 @@ enum AbsenceStatus {
   SICK
   PERMISSION
   ABSENT
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
 }
