@@ -16,16 +16,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Tambahkan ini agar file .env selalu ada
+      # --- Tambahkan file .env agar container punya env ---
       - name: Write be-core .env
         run: echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
 
       - name: Write worker .env
         run: echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
 
-      # --- Deploy be-core jika ada perubahan ---
+      # --- Build & Deploy be-core ---
       - name: Stop & remove old be-core container and image
         if: |
+          github.event.created == true ||
           contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
           contains(join(github.event.commits.*.added, ','), 'be-core/')
         run: |
@@ -35,14 +36,16 @@ jobs:
 
       - name: Build be-core image
         if: |
+          github.event.created == true ||
           contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
           contains(join(github.event.commits.*.added, ','), 'be-core/')
         run: |
           docker build -t be-core-stage:latest ./be-core
 
-      # --- Deploy worker jika ada perubahan ---
+      # --- Build & Deploy worker ---
       - name: Stop & remove old worker container and image
         if: |
+          github.event.created == true ||
           contains(join(github.event.commits.*.modified, ','), 'worker/') ||
           contains(join(github.event.commits.*.added, ','), 'worker/')
         run: |
@@ -52,6 +55,7 @@ jobs:
 
       - name: Build worker image
         if: |
+          github.event.created == true ||
           contains(join(github.event.commits.*.modified, ','), 'worker/') ||
           contains(join(github.event.commits.*.added, ','), 'worker/')
         run: |
