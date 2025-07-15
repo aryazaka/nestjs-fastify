@@ -13,42 +13,45 @@ jobs:
     runs-on: [self-hosted, stage]
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # 🧠 Detect changes
-      - name: Detect changes
+      # ✅ Selalu tulis .env dulu supaya selalu ada di local
+      - name: 📄 Write be-core .env
+        run: echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
+
+      - name: 📄 Write worker .env
+        run: echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
+
+      # 🧠 Detect changes: bandingkan commit HEAD^ dan HEAD
+      - name: 🔍 Detect changes
         id: changes
         run: |
-          git fetch origin stage
           echo "BE_CORE_CHANGED=$(git diff --name-only HEAD^ HEAD | grep '^be-core/' || true)" >> $GITHUB_ENV
           echo "WORKER_CHANGED=$(git diff --name-only HEAD^ HEAD | grep '^worker/' || true)" >> $GITHUB_ENV
 
-      # 🗑 Hapus image lama (tanpa stop container manual)
-      - name: Remove old be-core image
+      # 🗑 Remove old be-core image jika ada perubahan
+      - name: 🗑 Remove old be-core image
         if: env.BE_CORE_CHANGED != ''
-        run: |
-          docker rmi be-core-stage:latest || true
+        run: docker rmi be-core-stage:latest || true
 
-      - name: Build new be-core image
+      # 🛠 Build new be-core image
+      - name: 🛠 Build new be-core image
         if: env.BE_CORE_CHANGED != ''
-        run: |
-          echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
-          docker build -t be-core-stage:latest ./be-core
+        run: docker build -t be-core-stage:latest ./be-core
 
-      - name: Remove old worker image
+      # 🗑 Remove old worker image jika ada perubahan
+      - name: 🗑 Remove old worker image
         if: env.WORKER_CHANGED != ''
-        run: |
-          docker rmi worker-stage:latest || true
+        run: docker rmi worker-stage:latest || true
 
-      - name: Build new worker image
+      # 🛠 Build new worker image
+      - name: 🛠 Build new worker image
         if: env.WORKER_CHANGED != ''
-        run: |
-          echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
-          docker build -t worker-stage:latest ./worker
+        run: docker build -t worker-stage:latest ./worker
 
       # 🐳 Refresh containers: down → up -d
-      - name: Deploy using docker-compose
+      - name: 🚀 Deploy using docker-compose
         run: |
           docker compose -f docker-compose.stage.yml down
           docker compose -f docker-compose.stage.yml up -d
