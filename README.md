@@ -91,12 +91,13 @@ Pastikan Anda memiliki perangkat lunak berikut terinstal:
     Buat file `.env` di dalam direktori `be-core/` dan `worker/` berdasarkan file `.env.example` yang tersedia.
 
     **`be-core/.env` dan `worker/.env`:**
-    ```env
-RABBITMQ_URL=amqp://localhost:5672
-RABBITMQ_RPC_QUEUE_NAME=worker_rpc_queue
-REDIS_URL=redis://localhost:6379
-DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public" # Sesuaikan dengan DB Anda
-PORT=8000 # Untuk be-core
+    ```bash
+    PORT=8000 # Untuk be-core
+    DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public" # Sesuaikan dengan DB Anda
+    JWT_SECRET="token"
+    REDIS_URL=redis://localhost:6379
+    RABBITMQ_URL=amqp://localhost:5672
+    RABBITMQ_RPC_QUEUE_NAME=worker_rpc_queue
     ```
     *Pastikan `RABBITMQ_URL` dan `RABBITMQ_RPC_QUEUE_NAME` konsisten di kedua file `.env`.*
 
