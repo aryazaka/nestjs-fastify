@@ -6,10 +6,9 @@ COPY package*.json ./
 
 RUN npm install
 
-RUN npx prisma generate
-
 COPY . .
 
+RUN npx prisma generate
 # build worker
 RUN npm run build
 
