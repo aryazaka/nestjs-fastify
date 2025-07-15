@@ -1,0 +1,57 @@
+name: CI/CD Stage
+
+on:
+  push:
+    branches:
+      - stage
+    paths:
+      - 'be-core/**'
+      - 'worker/**'
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, stage]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- Deploy be-core jika ada perubahan ---
+      - name: Stop & remove old be-core container and image
+        if: |
+          contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
+          contains(join(github.event.commits.*.added, ','), 'be-core/')
+        run: |
+          docker stop be-core-container || true
+          docker rm be-core-container || true
+          docker rmi be-core-stage:latest || true
+
+      - name: Build be-core image
+        if: |
+          contains(join(github.event.commits.*.modified, ','), 'be-core/') ||
+          contains(join(github.event.commits.*.added, ','), 'be-core/')
+        run: |
+          echo "${{ secrets.BE_CORE_STAGE_ENV }}" > ./be-core/.env
+          docker build -t be-core-stage:latest ./be-core
+
+      # --- Deploy worker jika ada perubahan ---
+      - name: Stop & remove old worker container and image
+        if: |
+          contains(join(github.event.commits.*.modified, ','), 'worker/') ||
+          contains(join(github.event.commits.*.added, ','), 'worker/')
+        run: |
+          docker stop worker-container || true
+          docker rm worker-container || true
+          docker rmi worker-stage:latest || true
+
+      - name: Build worker image
+        if: |
+          contains(join(github.event.commits.*.modified, ','), 'worker/') ||
+          contains(join(github.event.commits.*.added, ','), 'worker/')
+        run: |
+          echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
+          docker build -t worker-stage:latest ./worker
+
+      # --- Deploy (jalankan compose, tidak build, hanya up image yang sudah dibuat) ---
+      - name: Deploy using docker-compose
+        run: docker compose -f docker-compose.stage.yml up -d

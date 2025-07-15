@@ -95,7 +95,7 @@ model PayrollComponent {
 }
 
 model PaymentTransaction {
-  id                       String        @id @default(cuid())
+  id                       Int        @id @default(autoincrement())
   payrollPeriod            PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
   payrollPeriodId          Int
   totalAmount              Float

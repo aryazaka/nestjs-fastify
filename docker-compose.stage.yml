@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  be-core:
+    container_name: be-core-container
+    image: be-core-stage:latest
+    restart: always
+    env_file: ./be-core/.env
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  worker:
+    container_name: worker-container
+    image: worker-stage:latest
+    restart: always
+    env_file: ./worker/.env
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
