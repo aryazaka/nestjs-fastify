@@ -10,6 +10,8 @@ COPY package*.json ./
 # install dependencies (hanya production dep kalau sudah build)
 RUN npm install
 
+RUN npx prisma generate
+
 # copy semua source code
 COPY . .
 
