@@ -15,10 +15,9 @@ COPY . .
 
 RUN npx prisma generate
 # build aplikasi
-RUN npm run build
 
 # expose port NestJS misalnya 3000
-EXPOSE 3000
+EXPOSE 5000
 
 # jalankan production start script
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:debug"]
