@@ -11,18 +11,18 @@ import { XenditModule } from './infra/xendit/xendit.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { GatewayModule } from './infra/gateway/gateway.module';
+import { CompanyUserModule } from './modules/company-user/company-user.module';
 
 @Module({
   imports: [
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
-      port: 8001, // ganti ke port lain
+      port: 8001,
     }),
     // LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // BooksModule,
     RedisModule,
     AuthModule,
     CompanyModule,
@@ -30,6 +30,7 @@ import { GatewayModule } from './infra/gateway/gateway.module';
     PaymentModule,
     WebhookModule,
     GatewayModule,
+    CompanyUserModule,
 
   ],
 })

@@ -8,7 +8,7 @@ export async function seedDummyData() {
   // 1. Create a Dummy Company
   const company = await prisma.company.create({
     data: {
-      name: 'PT. Dummy Jaya',
+      name: 'PT. Dummy Jaya', 
       emailAdmin: 'admin@dummyjaya.com',
       officePhone: '+628123456789',
       address: 'Jl. Dummy No. 123, Jakarta',
@@ -114,8 +114,8 @@ export async function seedDummyData() {
 
   await prisma.payrollComponent.createMany({
     data: [
-      { payrollId: payroll1.id, name: 'Gaji Pokok', amount: 4500000, type: 'EARNING' },
-      { payrollId: payroll1.id, name: 'Tunjangan Makan', amount: 500000, type: 'EARNING' },
+      { payrollId: payroll1.id, name: 'Gaji Pokok', amount: 4500000, type: 'BASICSALARY' },
+      { payrollId: payroll1.id, name: 'Tunjangan Makan', amount: 500000, type: 'ALLOWANCE' },
       { payrollId: payroll1.id, name: 'BPJS Kesehatan', amount: 100000, type: 'DEDUCTION' },
       { payrollId: payroll1.id, name: 'Pajak PPh 21', amount: 900000, type: 'DEDUCTION' },
     ],
@@ -136,8 +136,8 @@ export async function seedDummyData() {
 
   await prisma.payrollComponent.createMany({
     data: [
-      { payrollId: payroll2.id, name: 'Gaji Pokok', amount: 3800000, type: 'EARNING' },
-      { payrollId: payroll2.id, name: 'Tunjangan Transport', amount: 200000, type: 'EARNING' },
+      { payrollId: payroll2.id, name: 'Gaji Pokok', amount: 3800000, type: 'BASICSALARY' },
+      { payrollId: payroll2.id, name: 'Tunjangan Transport', amount: 200000, type: 'ALLOWANCE' },
       { payrollId: payroll2.id, name: 'Pajak PPh 21', amount: 800000, type: 'DEDUCTION' },
     ],
   });

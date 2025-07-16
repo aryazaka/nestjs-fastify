@@ -7,16 +7,21 @@ import {
   Patch,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create.company.dto';
 import { UpdateCompanyDto } from './dto/update.company.dto';
 import { CompanyService } from './company.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('company')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPERADMIN)
 export class CompanyController {
-  constructor(
-    private readonly companyService: CompanyService,
-  ) {}
+  constructor(private readonly companyService: CompanyService) {}
 
   @Get()
   async findAll() {

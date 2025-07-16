@@ -1,9 +1,6 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength, IsIn } from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 
-type RegisterableRole = 'HR' | 'FINANCE' | 'EMPLOYEE';
-
-export class RegisterDto {
+export class RegisterAdminDto {
   @IsNotEmpty()
   @IsNumber()
   companyId: number;
@@ -19,10 +16,6 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsString()
   address: string;
-
-  @IsNotEmpty()
-  @IsIn([Role.FINANCE, Role.HR, Role.EMPLOYEE])
-  role: RegisterableRole;
 
   @IsNotEmpty()
   @IsString()

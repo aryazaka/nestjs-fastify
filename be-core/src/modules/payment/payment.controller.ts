@@ -8,12 +8,17 @@ export class PaymentController {
 
   @Post('initiate')
   async initiatePayment(@Body() dto: CreatePaymentRequestDto, @Req() req: any) {
-    const userId = req.user?.id ?? 13; // ganti dengan JWT kalau sudah ada
+    const userId = req.user?.id ?? 22; // ganti dengan JWT kalau sudah ada
     return this.paymentService.initiatePayrollPayment(dto, userId);
   }
 
   @Get('transaction/:id')
   async getPaymentRequestByTransactionId(@Param('id') transactionId: number) {
     return this.paymentService.getPaymentRequestByTransactionId(transactionId);
+  }
+
+  @Post('simulate/:paymentRequestId')
+  async simulatePayment(@Param('paymentRequestId') paymentRequestId: string) {
+    return this.paymentService.simulatePayment(paymentRequestId);
   }
 }

@@ -50,6 +50,10 @@ jobs:
           echo "${{ secrets.WORKER_STAGE_ENV }}" > ./worker/.env
           docker build -t worker-stage:latest ./worker
 
+      - name: 🧹 Remove dangling images
+        run: |
+          docker image prune -f
+
       # --- DEPLOY ---
       - name: 🐳 Deploy using docker-compose
         run: |

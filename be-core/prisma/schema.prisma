@@ -12,7 +12,7 @@ model Company {
   name               String
   emailAdmin         String
   officePhone        String
-  address            String
+  address            String 
   users              User[]
   payrollPeriods     PayrollPeriod[]
   AttendanceSchedule AttendanceSchedule[]
@@ -53,10 +53,9 @@ model Salary {
   id         Int      @id @default(autoincrement())
   employee   Employee @relation(fields: [employeeId], references: [id])
   employeeId Int
-  baseSalary Float
-  allowance  Float
-  deduction  Float
-  type       String
+  baseSalary Decimal
+  allowance  Decimal  @default(0)
+  deduction  Decimal  @default(0)
 }
 
 model PayrollPeriod {
@@ -78,37 +77,36 @@ model Payroll {
   employeeId      Int
   payrollPeriod   PayrollPeriod      @relation(fields: [payrollPeriodId], references: [id])
   payrollPeriodId Int
-  totalSalary     Float
-  netSalary       Float
+  totalSalary     Decimal
+  netSalary       Decimal
   paidDate        DateTime?
   status          PaymentStatus      @default(UNPAID)
   components      PayrollComponent[]
 }
 
 model PayrollComponent {
-  id        Int     @id @default(autoincrement())
-  payroll   Payroll @relation(fields: [payrollId], references: [id])
+  id        Int                  @id @default(autoincrement())
+  payroll   Payroll              @relation(fields: [payrollId], references: [id])
   payrollId Int
   name      String
-  amount    Float
-  type      String
+  amount    Decimal
+  type      PayrollComponentType
 }
 
 model PaymentTransaction {
-  id                       Int        @id @default(autoincrement())
-  payrollPeriod            PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
-  payrollPeriodId          Int
-  totalAmount              Float
-  paymentMethod            String
-  status                   TransactionStatus
-  paidBy                   User          @relation(fields: [paidById], references: [id])
-  paidById                 Int
-  xenditPaymentRequestId   String?       @unique
-  xenditBatchDisbId       String?       @unique
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @updatedAt
+  id                     String            @id @default(cuid())
+  payrollPeriod          PayrollPeriod     @relation(fields: [payrollPeriodId], references: [id])
+  payrollPeriodId        Int
+  totalAmount            Decimal
+  paymentMethod          String
+  status                 TransactionStatus
+  paidBy                 User              @relation(fields: [paidById], references: [id])
+  paidById               Int
+  xenditPaymentRequestId String?           @unique
+  xenditBatchDisbId      String?           @unique
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 }
-
 
 model SalaryAdvance {
   id                Int           @id @default(autoincrement())
@@ -116,14 +114,14 @@ model SalaryAdvance {
   employeeId        Int
   payrollPeriod     PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
   payrollPeriodId   Int
-  requestedAmount   Float
-  maxAllowed        Float
+  requestedAmount   Decimal
+  maxAllowed        Decimal
   status            AdvanceStatus
   remarks           String?
   paymentStatus     PaymentStatus
   paymentReference  String?
-  serviceFee        Float
-  finalDisbursement Float
+  serviceFee        Decimal
+  finalDisbursement Decimal
   requestedAt       DateTime
   approvedBy        String?
   approvedAt        DateTime?
@@ -207,6 +205,13 @@ enum PayrollStatus {
   FAILED
 }
 
+enum PayrollComponentType {
+  BASICSALARY
+  ALLOWANCE
+  DEDUCTION
+  SALARYADVANCE
+}
+
 enum AdvanceStatus {
   PENDING
   APPROVED
@@ -220,19 +225,19 @@ enum PaymentStatus {
   FAILED
 }
 
+enum TransactionStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
 enum AttendanceStatus {
   PENDING
   PRESENT
   SICK
   PERMISSION
   ABSENT
-}
-
-enum TransactionStatus {
-  PENDING
-  PAID
-  EXPIRED
-  FAILED
 }
 
 enum AbsenceReason {

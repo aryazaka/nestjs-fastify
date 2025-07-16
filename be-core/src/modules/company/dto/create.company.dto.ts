@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
 
 export class CreateCompanyDto {
   @IsNotEmpty({ message: 'Nama perusahaan wajib diisi' })
@@ -16,6 +22,10 @@ export class CreateCompanyDto {
   @IsNotEmpty({ message: 'Alamat wajib diisi' })
   @IsString({ message: 'Alamat harus berupa teks' })
   address: string;
+
+  @IsNotEmpty({ message: 'Password wajib diisi' })
+  @MinLength(8, { message: 'Password minimal 8 karakter' })
+  password: string;
 
   @IsOptional()
   @IsString()

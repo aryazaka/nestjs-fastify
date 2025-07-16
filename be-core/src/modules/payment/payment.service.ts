@@ -30,7 +30,7 @@ export class PaymentService {
     const payrolls = await this.db.payroll.findMany({ where: { payrollPeriodId } });
     if (!payrolls.length) throw new NotFoundException('No payrolls for this period');
 
-    const calculatedTotal = payrolls.reduce((sum, p) => sum + p.netSalary, 0);
+    const calculatedTotal = payrolls.reduce((sum, p) => sum + p.netSalary.toNumber(), 0);
     if (calculatedTotal !== totalAmount) {
       throw new BadRequestException('Total amount mismatch with payroll data');
     }
@@ -118,5 +118,10 @@ export class PaymentService {
       paymentRequest,
       transaction,
     };
+  }
+
+   async simulatePayment(paymentRequestId: string): Promise<any> {
+    const paymentRequest = await this.xendit.simulatePaymentRequest(paymentRequestId);
+    return { message: 'Simulation successful', paymentRequest };
   }
 }

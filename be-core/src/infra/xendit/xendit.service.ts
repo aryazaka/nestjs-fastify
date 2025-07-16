@@ -10,12 +10,6 @@ export class XenditService {
   constructor(private readonly configService: ConfigService) {
     const secretKey = this.configService.get<string>('XENDIT_SECRET_KEY')!;
 
-    // Inisialisasi Xendit Client
-    const xenditClient = new Xendit({ secretKey });
-
-    // Cara 1: Dari destruktur PaymentRequest
-    this.paymentRequest = xenditClient.PaymentRequest;
-
     // Cara 2: Langsung buat PaymentRequestClient
     this.xenditPaymentRequestClient = new PaymentRequestClient({ secretKey });
   }
@@ -26,5 +20,11 @@ export class XenditService {
 
   async getPaymentRequestById(id: string): Promise<any> {
     return this.paymentRequest.getPaymentRequestByID({ paymentRequestId: id });
+  }
+
+   async simulatePaymentRequest(paymentRequestId: string): Promise<any> {
+    return this.xenditPaymentRequestClient.simulatePaymentRequestPayment({
+      paymentRequestId,
+    });
   }
 }
